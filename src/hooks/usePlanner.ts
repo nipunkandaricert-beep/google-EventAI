@@ -9,7 +9,7 @@ import {
   sampleEventDate,
 } from "../services/planBuilder";
 import { generatePlanContent, GeminiError, isConfigured, refinePlanWithAi, type AiConfig } from "../services/gemini";
-import type { ChatMessage, EventPlan, EventType, TaskStatus, VendorStatus } from "../types";
+import type { ChatMessage, EventDetails, EventPlan, EventStyle, EventType, TaskStatus, VendorStatus } from "../types";
 import { validateBudgetGuardrail, detectPromptInjection, normalizeInput } from "../utils/guardrails";
 import { parseEventIntake, type ParsedEventIntake } from "../utils/intakeParser";
 import { formatMoney } from "../utils/format";
@@ -37,6 +37,7 @@ export function describeError(err: unknown): string {
 export function usePlanner(ai: AiConfig) {
   const [plan, setPlan] = useState<EventPlan>(() => rebaseDates(SAMPLES.wedding!, sampleEventDate("wedding")));
   const [isSample, setIsSample] = useState(true);
+  const [hasPlan, setHasPlan] = useState(false);
   const [phase, setPhase] = useState<Phase>("intake");
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME]);
   const [intake, setIntake] = useState<ParsedEventIntake>({});
@@ -76,12 +77,73 @@ export function usePlanner(ai: AiConfig) {
       }
       const next = buildPlan(event, content, assumed);
       setPlan(next);
+      setHasPlan(true);
       setIsSample(false);
       setSource(content ? "ai" : "offline");
       setPhase("refining");
       setBusy(false);
       say(
         `Your plan for **${next.event.name}** is ready (${formatMoney(next.event.totalBudget, next.event.currency)}, ${next.event.guestCount} guests).${note} Ask me to refine it.`
+      );
+      notify("Plan generated");
+    },
+    [ai, say, notify]
+  );
+
+  const generateWithDetails = useCallback(
+    async (details: {
+      type: EventType;
+      name: string;
+      guestCount: number;
+      totalBudget: number;
+      date: string;
+      style: EventStyle;
+      location?: string;
+      notes?: string;
+    }) => {
+      const budgetCheck = validateBudgetGuardrail(details.totalBudget);
+      if (!budgetCheck.isValid) {
+        say(`I still need a valid budget. ${budgetCheck.message ?? ""}`);
+        return;
+      }
+      setBusy(true);
+      const event: EventDetails = {
+        id: `evt-${Date.now()}`,
+        type: details.type,
+        name: details.name,
+        date: details.date,
+        location: details.location || "",
+        guestCount: details.guestCount,
+        totalBudget: details.totalBudget,
+        style: details.style,
+        currency: "USD",
+        description: details.notes,
+      };
+      const assumed: string[] = [`Generated from dedicated ${details.type} studio inputs.`];
+      let content = null;
+      let note = "";
+      if (isConfigured(ai)) {
+        try {
+          content = await generatePlanContent(
+            event,
+            details.notes || `${details.name} for ${details.guestCount} guests`,
+            ai
+          );
+        } catch (err) {
+          note = ` ${describeError(err)} I used offline templates instead.`;
+        }
+      } else {
+        note = " No Gemini key is set, so I used offline templates. Add a key in Settings for AI-written plans.";
+      }
+      const next = buildPlan(event, content, assumed);
+      setPlan(next);
+      setHasPlan(true);
+      setIsSample(false);
+      setSource(content ? "ai" : "offline");
+      setPhase("refining");
+      setBusy(false);
+      say(
+        `Your blueprint for **${next.event.name}** is ready (${formatMoney(next.event.totalBudget, next.event.currency)}, ${next.event.guestCount} guests).${note} You can track spending, tick milestones, or ask for refinements.`
       );
       notify("Plan generated");
     },
@@ -113,7 +175,10 @@ export function usePlanner(ai: AiConfig) {
           try {
             refinement = await refinePlanWithAi(plan, text, ai);
           } catch (err) {
-            refinement = { ...refineOffline(text), reply: `${describeError(err)} ${refineOffline(text).reply}` };
+            refinement = {
+              ...refineOffline(text),
+              reply: `${describeError(err)} ${refineOffline(text).reply}`,
+            };
           }
         }
         setPlan((p) => applyRefinement(p, refinement));
@@ -148,6 +213,7 @@ export function usePlanner(ai: AiConfig) {
     (type: EventType) => {
       setPlan(rebaseDates(SAMPLES[type]!, sampleEventDate(type)));
       setIsSample(true);
+      setHasPlan(true);
       setSource(null);
       setPhase("refining");
       say(
@@ -160,9 +226,11 @@ export function usePlanner(ai: AiConfig) {
 
   const reset = useCallback(() => {
     setPhase("intake");
+    setHasPlan(false);
+    setIsSample(false);
     setIntake({});
     userTexts.current = [];
-    say("Starting fresh. Describe your next event.");
+    say("Starting fresh. Describe your next event or configure details.");
   }, [say]);
 
   const update = useCallback((fn: (p: EventPlan) => EventPlan) => setPlan(fn), []);
@@ -172,17 +240,30 @@ export function usePlanner(ai: AiConfig) {
       budget: p.budget.map((b) => (b.id === id ? { ...b, spent: Math.max(0, Math.round(val) || 0) } : b)),
     }));
   const toggleTimeline = (id: string) =>
-    update((p) => ({ ...p, timeline: p.timeline.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)) }));
+    update((p) => ({
+      ...p,
+      timeline: p.timeline.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)),
+    }));
   const setVendorStatus = (id: string, status: VendorStatus) =>
-    update((p) => ({ ...p, vendors: p.vendors.map((v) => (v.id === id ? { ...v, status } : v)) }));
+    update((p) => ({
+      ...p,
+      vendors: p.vendors.map((v) => (v.id === id ? { ...v, status } : v)),
+    }));
   const toggleIdea = (id: string) =>
-    update((p) => ({ ...p, ideas: p.ideas.map((i) => (i.id === id ? { ...i, saved: !i.saved } : i)) }));
+    update((p) => ({
+      ...p,
+      ideas: p.ideas.map((i) => (i.id === id ? { ...i, saved: !i.saved } : i)),
+    }));
   const setTaskStatus = (id: string, status: TaskStatus) =>
-    update((p) => ({ ...p, tasks: p.tasks.map((t) => (t.id === id ? { ...t, status } : t)) }));
+    update((p) => ({
+      ...p,
+      tasks: p.tasks.map((t) => (t.id === id ? { ...t, status } : t)),
+    }));
 
   return {
     plan,
     isSample,
+    hasPlan,
     phase,
     messages,
     intake,
@@ -191,6 +272,7 @@ export function usePlanner(ai: AiConfig) {
     source,
     send,
     generate: () => generate(intake),
+    generateWithDetails,
     loadSample,
     reset,
     notify,

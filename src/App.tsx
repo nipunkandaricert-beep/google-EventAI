@@ -2,6 +2,9 @@ import { lazy, Suspense, useState } from "react";
 import { ChatPanel } from "./components/ChatPanel";
 import { Header, type View } from "./components/Header";
 import { Home } from "./components/Home";
+import { WeddingStudio } from "./components/WeddingStudio";
+import { BirthdayStudio } from "./components/BirthdayStudio";
+import { CommunityStudio } from "./components/CommunityStudio";
 import { Toast } from "./components/primitives";
 import { SettingsModal } from "./components/SettingsModal";
 import { usePlanner } from "./hooks/usePlanner";
@@ -21,15 +24,10 @@ export default function App() {
 
   const openSample = (type: EventType) => {
     planner.loadSample(type);
-    setView("planner");
-  };
-
-  /** Start the planner with a specific event type pre-seeded into the chat */
-  const startWithType = (type: EventType) => {
-    planner.reset();
-    setView("planner");
-    // Send initial message to seed the event type
-    void planner.send(`I want to plan a ${type}${type === "community" ? " festival" : ""}`);
+    if (type === "wedding") setView("wedding");
+    else if (type === "birthday") setView("birthday");
+    else if (type === "community") setView("community");
+    else setView("planner");
   };
 
   const copySummary = () => {
@@ -53,7 +51,15 @@ export default function App() {
       <div inert={settingsOpen}>
         <Header
           view={view}
-          onView={setView}
+          onView={(v) => {
+            if (v === "wedding" || v === "birthday" || v === "community") {
+              // When entering a studio fresh, ensure input mode is shown
+              if (planner.isSample && planner.plan.event.type !== v) {
+                planner.reset();
+              }
+            }
+            setView(v);
+          }}
           isDark={settings.isDark}
           onDark={() => settings.setIsDark((v) => !v)}
           highContrast={settings.highContrast}
@@ -64,9 +70,89 @@ export default function App() {
           aiReady={isConfigured(settings.ai)}
         />
         <main id="main" tabIndex={-1}>
-          {view === "home" ? (
-            <Home onStart={() => setView("planner")} onStartWithType={startWithType} onSample={openSample} />
-          ) : (
+          {view === "home" && (
+            <Home
+              onStart={() => {
+                setView("planner");
+              }}
+              onOpenStudio={(v) => {
+                planner.reset();
+                setView(v);
+              }}
+              onSample={openSample}
+            />
+          )}
+
+          {view === "wedding" && (
+            <WeddingStudio
+              plan={planner.plan}
+              isSample={planner.isSample}
+              hasPlan={planner.hasPlan}
+              phase={planner.phase}
+              source={planner.source}
+              messages={planner.messages}
+              busy={planner.busy}
+              onSend={(t) => void planner.send(t)}
+              onGenerateWithDetails={planner.generateWithDetails}
+              onLoadSample={() => planner.loadSample("wedding")}
+              onReset={planner.reset}
+              onSpent={planner.updateSpent}
+              onToggleTimeline={planner.toggleTimeline}
+              onVendor={planner.setVendorStatus}
+              onIdea={planner.toggleIdea}
+              onTask={planner.setTaskStatus}
+              onCopy={copySummary}
+              onBackToHome={() => setView("home")}
+            />
+          )}
+
+          {view === "birthday" && (
+            <BirthdayStudio
+              plan={planner.plan}
+              isSample={planner.isSample}
+              hasPlan={planner.hasPlan}
+              phase={planner.phase}
+              source={planner.source}
+              messages={planner.messages}
+              busy={planner.busy}
+              onSend={(t) => void planner.send(t)}
+              onGenerateWithDetails={planner.generateWithDetails}
+              onLoadSample={() => planner.loadSample("birthday")}
+              onReset={planner.reset}
+              onSpent={planner.updateSpent}
+              onToggleTimeline={planner.toggleTimeline}
+              onVendor={planner.setVendorStatus}
+              onIdea={planner.toggleIdea}
+              onTask={planner.setTaskStatus}
+              onCopy={copySummary}
+              onBackToHome={() => setView("home")}
+            />
+          )}
+
+          {view === "community" && (
+            <CommunityStudio
+              plan={planner.plan}
+              isSample={planner.isSample}
+              hasPlan={planner.hasPlan}
+              phase={planner.phase}
+              source={planner.source}
+              messages={planner.messages}
+              busy={planner.busy}
+              onSend={(t) => void planner.send(t)}
+              onGenerateWithDetails={planner.generateWithDetails}
+              onLoadSample={() => planner.loadSample("community")}
+              onReset={planner.reset}
+              onSpent={planner.updateSpent}
+              onToggleTimeline={planner.toggleTimeline}
+              onVendor={planner.setVendorStatus}
+              onIdea={planner.toggleIdea}
+              onTask={planner.setTaskStatus}
+              onCopy={copySummary}
+              onBackToHome={() => setView("home")}
+            />
+          )}
+
+          {view === "planner" && (
             <div className="mx-auto grid max-w-7xl gap-4 p-4 lg:grid-cols-[22rem_1fr]">
               <h1 className="sr-only">Event planner</h1>
               <ChatPanel

@@ -88,3 +88,48 @@ html.hc .hero {
   background: #000;
   border-bottom: 2px solid #fff;
 }
+
+/* Print & PDF Export Styles */
+.print-only {
+  display: none !important;
+}
+
+@media print {
+  @page {
+    margin: 1.2cm;
+    size: A4 portrait;
+  }
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 11pt !important;
+    line-height: 1.4 !important;
+  }
+  header,
+  nav,
+  .screen-only,
+  .btn,
+  button,
+  input,
+  textarea,
+  select,
+  [role="tablist"],
+  [aria-label="Display and AI settings"] {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .surface {
+    border: 1px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 1rem;
+  }
+  .muted {
+    color: #475569 !important;
+  }
+}

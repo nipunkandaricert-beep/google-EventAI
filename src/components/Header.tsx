@@ -1,4 +1,4 @@
-export type View = "home" | "planner";
+export type View = "home" | "wedding" | "birthday" | "community" | "planner";
 
 interface Props {
   view: View;
@@ -13,13 +13,21 @@ interface Props {
   aiReady: boolean;
 }
 
+const NAV_ITEMS: { view: View; label: string }[] = [
+  { view: "home", label: "🏠 Home" },
+  { view: "wedding", label: "💒 Wedding" },
+  { view: "birthday", label: "🎂 Birthday" },
+  { view: "community", label: "🎪 Festival" },
+  { view: "planner", label: "📋 Planner" },
+];
+
 export function Header(p: Props) {
   const toggle = "btn btn-ghost";
   return (
     <header className="sticky top-0 z-40 border-b border-slate-300 bg-white/95 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-2">
         <div className="flex items-center gap-2">
-          {p.view === "planner" && (
+          {p.view !== "home" && (
             <button type="button" className="btn btn-ghost" onClick={() => p.onView("home")} aria-label="Back to home">
               ← Back
             </button>
@@ -33,16 +41,18 @@ export function Header(p: Props) {
             🎉 EventAI
           </button>
         </div>
-        <nav aria-label="Main" className="flex items-center gap-1">
-          {(["home", "planner"] as const).map((v) => (
+        <nav aria-label="Main" className="flex items-center gap-1 overflow-x-auto">
+          {NAV_ITEMS.map((item) => (
             <button
-              key={v}
+              key={item.view}
               type="button"
-              onClick={() => p.onView(v)}
-              aria-current={p.view === v ? "page" : undefined}
-              className={`btn ${p.view === v ? "btn-primary" : "btn-ghost"}`}
+              onClick={() => p.onView(item.view)}
+              aria-current={p.view === item.view ? "page" : undefined}
+              className={`btn whitespace-nowrap text-xs sm:text-sm ${
+                p.view === item.view ? "btn-primary" : "btn-ghost"
+              }`}
             >
-              {v === "home" ? "🏠 Home" : "📋 Planner"}
+              {item.label}
             </button>
           ))}
         </nav>

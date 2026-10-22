@@ -44,6 +44,10 @@ export default function Dashboard(p: Props) {
   const done = plan.tasks.filter((t) => t.status === "completed").length;
   const booked = plan.vendors.filter((v) => v.status === "booked" || v.status === "paid").length;
 
+  const handleDownloadPdf = () => {
+    window.print();
+  };
+
   return (
     <section aria-label="Event dashboard" className="surface space-y-4 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -61,9 +65,14 @@ export default function Dashboard(p: Props) {
                 : "Offline template; budget and dates calculated in code"}
           </p>
         </div>
-        <button type="button" className="btn btn-ghost" onClick={p.onCopy}>
-          Copy summary
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" className="btn btn-primary" onClick={handleDownloadPdf}>
+            📄 Download PDF
+          </button>
+          <button type="button" className="btn btn-ghost" onClick={p.onCopy}>
+            Copy summary
+          </button>
+        </div>
       </div>
 
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
