@@ -1,29 +1,75 @@
 import type { EventType } from "../types";
 
-const CARDS: { type: EventType; icon: string; title: string; body: string }[] = [
+const CARDS: {
+  type: EventType;
+  icon: string;
+  title: string;
+  tagline: string;
+  body: string;
+  gradient: string;
+  accent: string;
+  features: string[];
+}[] = [
   {
     type: "wedding",
     icon: "💒",
-    title: "Weddings",
-    body: "Long lead times, a venue-and-catering-heavy budget, cultural customs, attire and photography checklists.",
+    title: "Wedding Planner",
+    tagline: "Your dream day, perfectly orchestrated",
+    body: "From venue scouting to vows — manage long lead times, ceremony customs, attire checklists, and photographer timelines all in one place.",
+    gradient: "from-rose-900 to-pink-800",
+    accent: "rose",
+    features: [
+      "Venue & catering-heavy budget templates",
+      "12-month backward timeline",
+      "Cultural customs & dietary tracking",
+      "Attire, beauty & photography checklists",
+      "Seating chart & RSVP management ideas",
+    ],
   },
   {
     type: "birthday",
     icon: "🎂",
-    title: "Birthdays",
-    body: "Milestone parties with venue, food, entertainment, décor and a custom cake.",
+    title: "Birthday Planner",
+    tagline: "Milestone celebrations made effortless",
+    body: "Whether it's a kid's party or a milestone 30th — plan the perfect venue, cake, entertainment, and surprises with AI-powered suggestions.",
+    gradient: "from-amber-900 to-orange-800",
+    accent: "amber",
+    features: [
+      "Venue, food & entertainment budgets",
+      "4-6 week planning timeline",
+      "Custom cake & dessert tracking",
+      "Theme-based décor ideas",
+      "Guest activity & game suggestions",
+    ],
   },
   {
     type: "community",
     icon: "🎪",
-    title: "Community & festivals",
-    body: "Fundraisers and meetups with permits, sound, sanitation and volunteer coordination.",
+    title: "Community & Festival Planner",
+    tagline: "Bring your community together",
+    body: "Fundraisers, meetups, and outdoor festivals — handle permits, sound systems, volunteer coordination, and public safety in a single dashboard.",
+    gradient: "from-emerald-900 to-teal-800",
+    accent: "emerald",
+    features: [
+      "Permit & insurance tracking",
+      "Audio/visual & stage setup budgets",
+      "Volunteer recruitment & scheduling",
+      "Marketing & community outreach tasks",
+      "Sanitation & safety checklists",
+    ],
   },
 ];
 
-export function Home({ onStart, onSample }: { onStart: () => void; onSample: (t: EventType) => void }) {
+interface Props {
+  onStart: () => void;
+  onStartWithType: (type: EventType) => void;
+  onSample: (t: EventType) => void;
+}
+
+export function Home({ onStart, onStartWithType, onSample }: Props) {
   return (
     <div>
+      {/* Hero Section */}
       <section className="hero bg-gradient-to-b from-indigo-900 to-slate-900 px-6 py-20 text-white">
         <div className="mx-auto max-w-4xl text-center">
           <p className="inline-block rounded-full border border-indigo-300/40 px-3 py-1 text-xs font-semibold text-indigo-100">
@@ -62,25 +108,114 @@ export function Home({ onStart, onSample }: { onStart: () => void; onSample: (t:
           </ul>
         </div>
       </section>
+
+      {/* Event Type Cards — Separate UI for each category */}
       <section className="mx-auto max-w-7xl px-6 py-14" aria-labelledby="domains">
         <h2 id="domains" className="text-center text-3xl font-bold">
           Built for every milestone
         </h2>
-        <ul className="mt-10 grid gap-6 sm:grid-cols-3">
+        <p className="muted mx-auto mt-3 max-w-xl text-center text-sm">
+          Choose your event type to get a tailored planning experience with type-specific budgets, timelines, and
+          creative ideas.
+        </p>
+
+        <div className="mt-10 grid gap-8 lg:grid-cols-3">
           {CARDS.map((c) => (
-            <li key={c.type} className="surface p-6">
-              <p className="text-3xl" aria-hidden="true">
-                {c.icon}
-              </p>
-              <h3 className="mt-3 text-xl font-bold">{c.title}</h3>
-              <p className="muted mt-2 text-sm leading-relaxed">{c.body}</p>
-              <button type="button" onClick={() => onSample(c.type)} className="link mt-4 text-sm">
-                Open sample {c.type} blueprint
-              </button>
-            </li>
+            <div key={c.type} className="surface flex flex-col overflow-hidden">
+              {/* Card Header with themed gradient */}
+              <div className={`bg-gradient-to-br ${c.gradient} px-6 py-8 text-white`}>
+                <p className="text-4xl" aria-hidden="true">
+                  {c.icon}
+                </p>
+                <h3 className="mt-3 text-2xl font-extrabold">{c.title}</h3>
+                <p className="mt-1 text-sm font-medium opacity-90">{c.tagline}</p>
+              </div>
+
+              {/* Card Body */}
+              <div className="flex flex-1 flex-col p-6">
+                <p className="muted text-sm leading-relaxed">{c.body}</p>
+
+                {/* Feature list */}
+                <ul className="mt-4 flex-1 space-y-2">
+                  {c.features.map((f) => (
+                    <li key={f} className="flex items-start gap-2 text-sm">
+                      <span className="mt-0.5 text-green-600 dark:text-green-400" aria-hidden="true">
+                        ✓
+                      </span>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+
+                {/* Action buttons */}
+                <div className="mt-6 flex flex-wrap gap-2">
+                  <button type="button" onClick={() => onStartWithType(c.type)} className="btn btn-primary flex-1">
+                    Plan a {c.type === "community" ? "festival" : c.type}
+                  </button>
+                  <button type="button" onClick={() => onSample(c.type)} className="btn btn-ghost">
+                    View sample
+                  </button>
+                </div>
+              </div>
+            </div>
           ))}
-        </ul>
+        </div>
       </section>
+
+      {/* How it Works */}
+      <section className="bg-slate-100 px-6 py-14 dark:bg-slate-900">
+        <div className="mx-auto max-w-5xl">
+          <h2 className="text-center text-3xl font-bold">How it works</h2>
+          <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                step: "1",
+                icon: "💬",
+                title: "Describe",
+                desc: "Tell EventAI about your event in plain English — type, guests, budget, date, and vibe.",
+              },
+              {
+                step: "2",
+                icon: "⚡",
+                title: "Generate",
+                desc: "AI builds a full plan with budget breakdown, timeline, vendors, ideas, and tasks.",
+              },
+              {
+                step: "3",
+                icon: "✏️",
+                title: "Refine",
+                desc: "Ask for changes — cut the budget by 20%, switch to outdoor, add a photo booth.",
+              },
+              {
+                step: "4",
+                icon: "📋",
+                title: "Execute",
+                desc: "Track spending, check off milestones, manage vendors, and save your favourite ideas.",
+              },
+            ].map((s) => (
+              <div key={s.step} className="text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100 text-2xl dark:bg-indigo-900">
+                  {s.icon}
+                </div>
+                <h3 className="mt-4 font-bold">
+                  {s.step}. {s.title}
+                </h3>
+                <p className="muted mt-2 text-sm">{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-300 px-6 py-8 text-center dark:border-slate-700">
+        <p className="muted text-sm">
+          EventAI — GenAI Event Planning Assistant · Built with React, Vite & Google Gemini
+        </p>
+        <p className="muted mt-1 text-xs">
+          Budget calculations and dates are always computed in code, never by the AI model.
+        </p>
+      </footer>
     </div>
   );
 }

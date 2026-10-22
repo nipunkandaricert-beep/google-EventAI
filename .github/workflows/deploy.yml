@@ -15,22 +15,41 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  verify:
-    uses: ./.github/workflows/ci.yml
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint, format and typecheck
+        run: |
+          npm run lint
+          npm run format:check
+          npm run typecheck
+
+      - name: Run Tests
+        run: npm test
+
+      - name: Build Vite App
+        run: npm run build
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
 
   deploy:
-    needs: verify
+    needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
       - id: deployment
         uses: actions/deploy-pages@v4

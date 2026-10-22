@@ -15,13 +15,23 @@ const aiPlan = {
   })),
   vendors: [{ category: "Venue", name: "Garden venue shortlist" }],
   ideas: [{ category: "theme", content: "Pastel palette" }],
-  tasks: [{ title: "Send invites", phase: "Planning", priority: "high", daysBeforeEvent: 60 }],
+  tasks: [
+    {
+      title: "Send invites",
+      phase: "Planning",
+      priority: "high",
+      daysBeforeEvent: 60,
+    },
+  ],
   assumptions: ["Guests prefer an afternoon start."],
 };
 const geminiOk = (payload: unknown) =>
-  new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: JSON.stringify(payload) }] } }] }), {
-    status: 200,
-  });
+  new Response(
+    JSON.stringify({
+      candidates: [{ content: { parts: [{ text: JSON.stringify(payload) }] } }],
+    }),
+    { status: 200 }
+  );
 
 async function openPlanner(user: ReturnType<typeof userEvent.setup>) {
   render(<App />);
@@ -35,7 +45,10 @@ async function say(user: ReturnType<typeof userEvent.setup>, text: string) {
 async function generateOffline(user: ReturnType<typeof userEvent.setup>) {
   await say(user, "garden wedding for 120 guests, $30,000 budget in March");
   await user.click(screen.getByRole("button", { name: /generate plan/i }));
-  await screen.findByRole("heading", { level: 2, name: /Wedding on \d{4}-03-15/ });
+  await screen.findByRole("heading", {
+    level: 2,
+    name: /Wedding on \d{4}-03-15/,
+  });
 }
 
 beforeEach(() => {
@@ -92,7 +105,9 @@ describe("keyboard and focus", () => {
     render(<App />);
     const opener = screen.getByRole("button", { name: /settings/i });
     await user.click(opener);
-    const dialog = screen.getByRole("dialog", { name: /gemini settings/i });
+    const dialog = screen.getByRole("dialog", {
+      name: /gemini settings/i,
+    });
     expect(within(dialog).getByLabelText(/gemini api key/i)).toHaveFocus();
     await user.tab({ shift: true });
     expect(within(dialog).getByRole("button", { name: "Save" })).toHaveFocus();
@@ -119,9 +134,9 @@ describe("display settings", () => {
     const user = userEvent.setup();
     render(<App />);
     for (const [name, cls] of [
-      ["Dark mode", "dark"],
-      ["High contrast", "hc"],
-      ["Large text", "text-large"],
+      [/^🌙$|^☀️$/, "dark"],
+      [/👁️ HC/, "hc"],
+      [/^A\+$/, "text-large"],
     ] as const) {
       const btn = screen.getByRole("button", { name });
       await user.click(btn);
@@ -199,17 +214,27 @@ describe("Gemini-powered flow", () => {
       .fn()
       .mockResolvedValueOnce(geminiOk(aiPlan))
       .mockResolvedValueOnce(
-        geminiOk({ reply: "Trimmed the budget.", budgetDeltaPercent: -10, addIdeas: [], addTasks: [] })
+        geminiOk({
+          reply: "Trimmed the budget.",
+          budgetDeltaPercent: -10,
+          addIdeas: [],
+          addTasks: [],
+        })
       );
     vi.stubGlobal("fetch", fetchMock);
     render(<App />);
     await setKey(user);
-    expect(screen.getByRole("button", { name: /gemini: on/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /gemini/i })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /launch planner/i }));
     await screen.findByRole("tablist");
     await say(user, "spring wedding, $10,000 for 60 guests in May");
     await user.click(screen.getByRole("button", { name: /generate plan/i }));
-    expect(await screen.findByRole("heading", { level: 2, name: "Spring Soirée" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", {
+        level: 2,
+        name: "Spring Soirée",
+      })
+    ).toBeInTheDocument();
     expect(screen.getByText(/Written by Gemini/)).toBeInTheDocument();
     expect(screen.getByText("Guests prefer an afternoon start.")).toBeInTheDocument();
     await say(user, "trim the budget a little");
@@ -225,10 +250,12 @@ describe("Gemini-powered flow", () => {
     render(<App />);
     await setKey(user, true);
     expect(sessionStorage.getItem("eventai_gemini_key")).toBe("TEST-KEY");
-    await user.click(screen.getByRole("button", { name: /settings/i }));
+    // After saving a key the button label changes to "✅ Gemini"
+    await user.click(screen.getByRole("button", { name: /gemini|settings/i }));
     await user.click(screen.getByRole("button", { name: /clear key/i }));
     expect(sessionStorage.getItem("eventai_gemini_key")).toBeNull();
-    expect(screen.getByRole("button", { name: /gemini: off/i })).toBeInTheDocument();
+    // After clearing, button returns to "⚙️ Settings"
+    expect(screen.getByRole("button", { name: /settings/i })).toBeInTheDocument();
   });
 
   it("falls back to offline templates and explains why when Gemini fails", async () => {
@@ -273,7 +300,9 @@ describe("dashboard interactions", () => {
     expect(select).toHaveValue("booked");
 
     await user.click(screen.getByRole("tab", { name: "Ideas" }));
-    const idea = screen.getAllByRole("button", { name: /save idea|saved/i })[0]!;
+    const idea = screen.getAllByRole("button", {
+      name: /save idea|saved/i,
+    })[0]!;
     const before = idea.getAttribute("aria-pressed");
     await user.click(idea);
     expect(idea.getAttribute("aria-pressed")).not.toBe(before);
@@ -287,7 +316,10 @@ describe("dashboard interactions", () => {
   it("flags overdue milestones with text, and copies a summary", async () => {
     const user = userEvent.setup();
     const writeText = vi.fn().mockResolvedValue(undefined);
-    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText },
+      configurable: true,
+    });
     await openPlanner(user);
     await user.click(screen.getByRole("button", { name: /copy summary/i }));
     expect(writeText).toHaveBeenCalledWith(expect.stringContaining("Budget:"));
@@ -297,13 +329,24 @@ describe("dashboard interactions", () => {
   it("loads each sample blueprint from the home page", async () => {
     const user = userEvent.setup();
     render(<App />);
-    await user.click(screen.getByRole("button", { name: /open sample birthday blueprint/i }));
+    // Birthday "View sample" button is the second "View sample" button on page
+    const viewSampleBtns = screen.getAllByRole("button", {
+      name: /view sample/i,
+    });
+    await user.click(viewSampleBtns[1]!); // birthday is the 2nd card
     expect(await screen.findByText(/Sample data/)).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Home" }));
-    await user.click(screen.getByRole("button", { name: /open sample community blueprint/i }));
+    await user.click(screen.getByRole("button", { name: /🏠 Home/i }));
+    const viewSampleBtns2 = screen.getAllByRole("button", {
+      name: /view sample/i,
+    });
+    await user.click(viewSampleBtns2[2]!); // community is the 3rd card
     expect(await screen.findByText(/Sample data/)).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Home" }));
-    await user.click(screen.getByRole("button", { name: /explore a sample wedding/i }));
+    await user.click(screen.getByRole("button", { name: /🏠 Home/i }));
+    await user.click(
+      screen.getByRole("button", {
+        name: /explore a sample wedding/i,
+      })
+    );
     expect(await screen.findByRole("tablist")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /eventai home/i }));
     expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();

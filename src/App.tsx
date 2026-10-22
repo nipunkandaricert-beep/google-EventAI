@@ -24,6 +24,14 @@ export default function App() {
     setView("planner");
   };
 
+  /** Start the planner with a specific event type pre-seeded into the chat */
+  const startWithType = (type: EventType) => {
+    planner.reset();
+    setView("planner");
+    // Send initial message to seed the event type
+    void planner.send(`I want to plan a ${type}${type === "community" ? " festival" : ""}`);
+  };
+
   const copySummary = () => {
     const { event } = planner.plan;
     const text = `${event.name}\n${event.type} on ${event.date}\nGuests: ${event.guestCount}\nBudget: ${formatMoney(event.totalBudget, event.currency)}`;
@@ -57,7 +65,7 @@ export default function App() {
         />
         <main id="main" tabIndex={-1}>
           {view === "home" ? (
-            <Home onStart={() => setView("planner")} onSample={openSample} />
+            <Home onStart={() => setView("planner")} onStartWithType={startWithType} onSample={openSample} />
           ) : (
             <div className="mx-auto grid max-w-7xl gap-4 p-4 lg:grid-cols-[22rem_1fr]">
               <h1 className="sr-only">Event planner</h1>
