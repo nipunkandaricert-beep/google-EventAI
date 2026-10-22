@@ -111,10 +111,14 @@ export function WeddingStudio(p: Props) {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                <label
+                  htmlFor="wedding-names"
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400"
+                >
                   Couple / Wedding Name
                 </label>
                 <input
+                  id="wedding-names"
                   type="text"
                   className="input mt-1"
                   value={coupleNames}
@@ -124,10 +128,14 @@ export function WeddingStudio(p: Props) {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                <label
+                  htmlFor="wedding-date"
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400"
+                >
                   Target Wedding Date
                 </label>
                 <input
+                  id="wedding-date"
                   type="date"
                   className="input mt-1"
                   value={weddingDate}
@@ -136,10 +144,14 @@ export function WeddingStudio(p: Props) {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                <label
+                  htmlFor="wedding-guests"
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400"
+                >
                   Estimated Guest Count: <span className="text-indigo-600 font-extrabold">{guestCount}</span> guests
                 </label>
                 <input
+                  id="wedding-guests"
                   type="range"
                   min="20"
                   max="500"
@@ -156,10 +168,14 @@ export function WeddingStudio(p: Props) {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                <label
+                  htmlFor="wedding-budget"
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400"
+                >
                   Total Wedding Budget ($)
                 </label>
                 <input
+                  id="wedding-budget"
                   type="number"
                   min="1000"
                   max="10000000"
@@ -172,10 +188,18 @@ export function WeddingStudio(p: Props) {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                <label
+                  htmlFor="wedding-style"
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400"
+                >
                   Aesthetic Style
                 </label>
-                <select className="input mt-1" value={style} onChange={(e) => setStyle(e.target.value as EventStyle)}>
+                <select
+                  id="wedding-style"
+                  className="input mt-1"
+                  value={style}
+                  onChange={(e) => setStyle(e.target.value as EventStyle)}
+                >
                   <option value="rustic">Rustic Vineyard</option>
                   <option value="elegant">Elegant Ballroom</option>
                   <option value="modern">Modern Minimalist</option>

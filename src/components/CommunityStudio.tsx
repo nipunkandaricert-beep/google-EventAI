@@ -115,10 +115,14 @@ export function CommunityStudio(p: Props) {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                <label
+                  htmlFor="festival-name"
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400"
+                >
                   Festival / Event Name
                 </label>
                 <input
+                  id="festival-name"
                   type="text"
                   className="input mt-1"
                   value={eventName}
@@ -128,10 +132,18 @@ export function CommunityStudio(p: Props) {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                <label
+                  htmlFor="festival-category"
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400"
+                >
                   Event Category
                 </label>
-                <select className="input mt-1" value={category} onChange={(e) => setCategory(e.target.value)}>
+                <select
+                  id="festival-category"
+                  className="input mt-1"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                >
                   <option value="Arts & Music Festival">Arts & Music Festival</option>
                   <option value="Neighborhood Block Party">Neighborhood Block Party</option>
                   <option value="Charity 5K Walk / Fundraiser">Charity 5K / Fundraiser</option>
@@ -141,10 +153,14 @@ export function CommunityStudio(p: Props) {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                <label
+                  htmlFor="festival-date"
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400"
+                >
                   Festival Date
                 </label>
                 <input
+                  id="festival-date"
                   type="date"
                   className="input mt-1"
                   value={festivalDate}
@@ -153,10 +169,14 @@ export function CommunityStudio(p: Props) {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                <label
+                  htmlFor="festival-budget"
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400"
+                >
                   Total Budget ($)
                 </label>
                 <input
+                  id="festival-budget"
                   type="number"
                   min="1000"
                   max="5000000"
@@ -171,10 +191,14 @@ export function CommunityStudio(p: Props) {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                <label
+                  htmlFor="festival-attendees"
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400"
+                >
                   Expected Attendees: <span className="text-teal-600 font-extrabold">{attendees}</span> people
                 </label>
                 <input
+                  id="festival-attendees"
                   type="range"
                   min="50"
                   max="2000"
@@ -191,10 +215,18 @@ export function CommunityStudio(p: Props) {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                <label
+                  htmlFor="festival-style"
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400"
+                >
                   Venue & Style
                 </label>
-                <select className="input mt-1" value={style} onChange={(e) => setStyle(e.target.value as EventStyle)}>
+                <select
+                  id="festival-style"
+                  className="input mt-1"
+                  value={style}
+                  onChange={(e) => setStyle(e.target.value as EventStyle)}
+                >
                   <option value="outdoor">City Public Park (Outdoor)</option>
                   <option value="casual">Closed Street / Plaza</option>
                   <option value="modern">Conference / Convention Hall</option>
@@ -204,10 +236,14 @@ export function CommunityStudio(p: Props) {
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+              <label
+                htmlFor="festival-location"
+                className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400"
+              >
                 Park Location / Address
               </label>
               <input
+                id="festival-location"
                 type="text"
                 className="input mt-1"
                 value={location}
@@ -217,10 +253,14 @@ export function CommunityStudio(p: Props) {
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+              <label
+                htmlFor="festival-permits"
+                className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400"
+              >
                 City Permits & Municipal Requirements
               </label>
               <input
+                id="festival-permits"
                 type="text"
                 className="input mt-1"
                 value={permits}

@@ -114,10 +114,14 @@ export function BirthdayStudio(p: Props) {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                <label
+                  htmlFor="birthday-honoree"
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400"
+                >
                   Guest of Honor
                 </label>
                 <input
+                  id="birthday-honoree"
                   type="text"
                   className="input mt-1"
                   value={honoree}
@@ -127,10 +131,18 @@ export function BirthdayStudio(p: Props) {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                <label
+                  htmlFor="birthday-milestone"
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400"
+                >
                   Milestone Occasion
                 </label>
-                <select className="input mt-1" value={milestone} onChange={(e) => setMilestone(e.target.value)}>
+                <select
+                  id="birthday-milestone"
+                  className="input mt-1"
+                  value={milestone}
+                  onChange={(e) => setMilestone(e.target.value)}
+                >
                   <option value="1st Birthday Extravaganza">1st Birthday</option>
                   <option value="Sweet 16 Dance Party">Sweet 16</option>
                   <option value="21st Birthday Bash">21st Celebration</option>
@@ -142,10 +154,14 @@ export function BirthdayStudio(p: Props) {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                <label
+                  htmlFor="birthday-date"
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400"
+                >
                   Party Date
                 </label>
                 <input
+                  id="birthday-date"
                   type="date"
                   className="input mt-1"
                   value={partyDate}
@@ -154,10 +170,14 @@ export function BirthdayStudio(p: Props) {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                <label
+                  htmlFor="birthday-budget"
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400"
+                >
                   Total Birthday Budget ($)
                 </label>
                 <input
+                  id="birthday-budget"
                   type="number"
                   min="500"
                   max="1000000"
@@ -170,10 +190,14 @@ export function BirthdayStudio(p: Props) {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                <label
+                  htmlFor="birthday-guests"
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400"
+                >
                   Guest Count: <span className="text-amber-600 font-extrabold">{guestCount}</span> guests
                 </label>
                 <input
+                  id="birthday-guests"
                   type="range"
                   min="10"
                   max="200"
@@ -190,10 +214,18 @@ export function BirthdayStudio(p: Props) {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                <label
+                  htmlFor="birthday-style"
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400"
+                >
                   Party Vibe / Style
                 </label>
-                <select className="input mt-1" value={style} onChange={(e) => setStyle(e.target.value as EventStyle)}>
+                <select
+                  id="birthday-style"
+                  className="input mt-1"
+                  value={style}
+                  onChange={(e) => setStyle(e.target.value as EventStyle)}
+                >
                   <option value="modern">Neon Rooftop / Modern</option>
                   <option value="casual">Casual Backyard Lounge</option>
                   <option value="elegant">Private Dinner & Cocktails</option>
@@ -203,10 +235,14 @@ export function BirthdayStudio(p: Props) {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                <label
+                  htmlFor="birthday-location"
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400"
+                >
                   Party Venue / Location
                 </label>
                 <input
+                  id="birthday-location"
                   type="text"
                   className="input mt-1"
                   value={location}
@@ -217,10 +253,14 @@ export function BirthdayStudio(p: Props) {
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+              <label
+                htmlFor="birthday-cake"
+                className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400"
+              >
                 Custom Cake & Dessert Theme
               </label>
               <input
+                id="birthday-cake"
                 type="text"
                 className="input mt-1"
                 value={cakeFlavor}
