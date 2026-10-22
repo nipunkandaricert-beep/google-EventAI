@@ -1,12 +1,6 @@
 export type EventType = "wedding" | "birthday" | "community";
 
-export type EventStyle =
-  | "elegant"
-  | "casual"
-  | "rustic"
-  | "modern"
-  | "traditional"
-  | "outdoor";
+export type EventStyle = "elegant" | "casual" | "rustic" | "modern" | "traditional" | "outdoor";
 
 export type VendorStatus = "needed" | "contacted" | "quoted" | "booked" | "paid";
 export type TaskStatus = "pending" | "in-progress" | "completed";
@@ -23,6 +17,7 @@ export interface EventDetails {
   culture?: string;
   dietaryNeeds?: string[];
   constraints?: string;
+  currency?: string;
   description?: string;
 }
 
@@ -76,6 +71,7 @@ export interface EventPlan {
   vendors: VendorItem[];
   ideas: IdeaItem[];
   tasks: TaskItem[];
+  assumptions?: string[];
 }
 
 export interface ChatMessage {
@@ -83,4 +79,43 @@ export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   timestamp: string;
+}
+
+/** Content a language model may propose. Dates are offsets; money is never AI-computed. */
+export interface AiTimelineStep {
+  title: string;
+  description: string;
+  phase: string;
+  daysBeforeEvent: number;
+}
+export interface AiVendor {
+  category: string;
+  name: string;
+}
+export interface AiIdea {
+  category: IdeaItem["category"];
+  content: string;
+}
+export interface AiTask {
+  title: string;
+  phase: string;
+  priority: TaskItem["priority"];
+  daysBeforeEvent: number;
+}
+export interface AiPlanContent {
+  eventName: string;
+  description: string;
+  timeline: AiTimelineStep[];
+  vendors: AiVendor[];
+  ideas: AiIdea[];
+  tasks: AiTask[];
+  assumptions: string[];
+}
+export interface AiRefinement {
+  reply: string;
+  budgetDeltaPercent?: number;
+  guestCount?: number;
+  style?: EventStyle;
+  addIdeas: AiIdea[];
+  addTasks: AiTask[];
 }

@@ -17,7 +17,7 @@ export interface LeadTimeCheck {
 export function checkLeadTimeFeasibility(
   eventDateStr: string,
   guestCount: number,
-  now: Date = new Date("2026-10-21")
+  now: Date = new Date()
 ): LeadTimeCheck {
   const targetDate = new Date(eventDateStr);
   const diffMs = targetDate.getTime() - now.getTime();
@@ -60,7 +60,7 @@ export function generateBackwardTimeline(eventDateStr: string, eventType: EventT
 
   const subtractDays = (d: Date, days: number) => {
     const copy = new Date(d);
-    copy.setDate(copy.getDate() - days);
+    copy.setUTCDate(copy.getUTCDate() - days);
     return copy.toISOString().split("T")[0];
   };
 

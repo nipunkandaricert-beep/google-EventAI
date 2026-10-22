@@ -1,65 +1,74 @@
-# 🎉 EventAI — GenAI Event Planning Assistant
+# EventAI — GenAI Event Planning Assistant
 
-An AI-powered event planning assistant that crafts tailored event blueprints (weddings, birthdays, fundraisers, community festivals) with strict deterministic budget allocations, reverse-scheduled timelines, lead-time feasibility guardrails, vendor tracking, and personalized creative concepts.
+[![CI](https://github.com/nipunkandaricert-beep/google-EventAI/actions/workflows/ci.yml/badge.svg)](https://github.com/nipunkandaricert-beep/google-EventAI/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
----
+Describe a wedding, birthday or community event in plain English and EventAI returns a budget, a backward-scheduled timeline, a vendor checklist, ideas and tasks, and **states every assumption it made**. Built for Google Prompt Wars with React, TypeScript, Vite, Tailwind CSS and the Google Gemini API.
 
-## 🌟 Key Capabilities & Architectural Highlights
+**Live demo:** https://nipunkandaricert-beep.github.io/google-EventAI/
 
-### 1. 🤖 Intelligent Natural Language Intake & Entity Extraction
-- Parses freeform user descriptions (e.g., *"Planning a 150-guest wedding in November for \$25k in rustic chic style"*).
-- Extracts event type, guest count, target date, budget numbers, and aesthetic preferences.
-- Intercepts prompt injection attempts and neutralizes malicious inputs (`guardrails.ts`).
+## How it works
 
-### 2. 🛡️ Problem Statement Alignment & Feasibility Guardrails
-- **Automated Lead-Time Feasibility Warnings:** Implements strict guardrails flagging high-risk planning windows (< 2 weeks for small events, < 2 months for > 100 guests) with concrete remediation advice.
-- **Explicit Assumptions Panel:** The assistant clearly states all baseline assumptions (e.g., per-person allocation ratios, buffer reserves, booking windows) so planners maintain full control.
-- **Deterministic Math Engine:** Category percentage allocations and dollar sums are strictly computed via code (`budgetEngine.ts`), preventing LLM arithmetic hallucination.
+| Concern | Who does it | Why |
+| --- | --- | --- |
+| Budget splits and totals | **Code** (`budgetEngine.ts`, largest-remainder allocation) | LLMs are unreliable at arithmetic; allocations always sum exactly to the budget. |
+| Dates, lead-time warnings | **Code** (`timelineEngine.ts`, UTC date maths) | Deterministic and time-zone safe. |
+| Timeline, vendors, ideas, tasks, assumptions | **Gemini** (JSON mode), validated by `aiSchema.ts` | Creative, event-specific content. |
+| Refinement ("cut the budget by 15%", "make it outdoor") | **Gemini** proposes a structured change, **code** applies it | The model never edits numbers directly. |
+| No key, or Gemini fails | **Offline templates**, clearly labelled in the UI | The app always produces a complete plan. |
 
-### 3. 🧪 Comprehensive Automated Testing & Diagnostic Suite (100% Passing)
-- **Vitest Unit Test Suite:** Run `npm test` to execute automated test suites covering:
-  - `tests/budget.test.ts`: 100% split totals, exact dollar arithmetic, proportional reductions (e.g. 20% budget cuts), bounds checking.
-  - `tests/timeline.test.ts`: Reverse chronological milestone sequencing, lead-time warning triggers.
-  - `tests/guardrails.test.ts`: HTML XSS sanitization, prompt injection interception, budget boundaries.
-  - `tests/intake.test.ts`: NLP entity extraction from conversational prompts.
-- **Interactive In-Browser Test Runner:** Built-in `🧪 Test Suite` tab allows evaluators and users to execute 9 live regression and validation checks with real-time pass/fail indicators.
+Missing details (type, guests, date, style) are filled with defaults that are listed in the **Assumptions** panel. A budget is required.
 
-### 4. ♿ Accessibility (WCAG 2.1 AA Standard)
-- **Keyboard Navigation & ARIA Support:** Proper `role="tab"`, `role="tabpanel"`, `role="progressbar"`, `role="log"`, and `role="banner"` throughout.
-- **Skip to Content Link:** Immediate jump for screen readers.
-- **Custom Accessibility Controls:**
-  - Dynamic Font Resizing (`A+` / `A-`) for reading comfort.
-  - Dedicated High-Contrast Mode (`👁️ HC`) for visual clarity.
-  - System-responsive Dark/Light theme toggle.
-
-### 5. 🔒 Security & Safe Sanitization
-- Input sanitization strips dangerous HTML/script tags before processing.
-- Regex guardrails monitor for delimiter tampering and prompt jailbreaks.
-- Client-side Gemini API key isolation stored securely in browser `localStorage`.
-
----
-
-## 🚀 Quickstart & Local Setup
+## Getting started
 
 ```bash
-# 1. Install dependencies
-npm install
-
-# 2. Run automated test suites
-npm test
-
-# 3. Start local development server
-npm run dev
+npm ci
+npm run dev        # http://localhost:5173
 ```
 
-Open [http://localhost:3000](http://localhost:3000) (or Vite port displayed in terminal) in your browser.
+Open **Settings** in the header and paste a [Google AI Studio](https://aistudio.google.com/) key to enable AI-written plans. Without a key the app runs in offline mode.
 
----
+### Safer for public deployments: the proxy
 
-## 📦 Production Build & Deployment
+A static site cannot hide an API key. Deploy `proxy/worker.js` (Cloudflare Worker, instructions inside), then build with:
 
 ```bash
-npm run build
+VITE_GEMINI_PROXY_URL=https://your-worker.workers.dev npm run build
 ```
 
-The production output is generated in `dist/` with relative asset links (`base: './'`), completely ready for GitHub Pages or static host deployment.
+The browser then never sees a key, and the production CSP is automatically widened to allow only that origin.
+
+## Scripts
+
+| Command | What it does |
+| --- | --- |
+| `npm run check` | Lint, format check, typecheck, tests with coverage thresholds, build |
+| `npm test` / `npm run test:coverage` | Vitest unit and component tests |
+| `npm run test:tz` | Same tests under a daylight-saving time zone |
+| `npm run lint` / `npm run format` | oxlint / Prettier |
+| `npm run audit` | `npm audit` for production dependencies |
+
+## Quality gates
+
+- **Testing:** unit tests for the budget, timeline, intake, guardrail, schema, Gemini-service (mocked `fetch`, retries, timeouts, blocked/invalid output) and plan-builder logic, plus React Testing Library flows for chat, generation, refinement, settings and every dashboard tab. Coverage thresholds (90% lines/functions/statements, 80% branches) are enforced in CI.
+- **Accessibility:** axe-core runs against the home page, every dashboard tab and the settings dialog in the test suite. Tabs follow the WAI-ARIA pattern (arrow keys, Home/End, roving tabindex); the dialog traps and restores focus; chat is an `aria-live` log; status is never conveyed by colour alone; high-contrast mode, large text and `prefers-reduced-motion` are supported. A test checks WCAG AA contrast ratios for the design tokens. `lighthouse.yml` asserts a 100 accessibility score in CI.
+- **Security:** see [SECURITY.md](SECURITY.md): key kept out of `localStorage` and URLs, untrusted text delimited in prompts, model output validated and sanitised, strict production CSP, no runtime third-party scripts, Dependabot.
+- **Code quality:** strict TypeScript, small focused components and hooks, pure logic in `src/utils` and `src/services`, oxlint with `--deny-warnings`, Prettier, `.editorconfig`.
+- **Efficiency:** Tailwind compiled at build time (no runtime CDN script), the dashboard is code-split, and the LLM is only called for creative content.
+
+## Project structure
+
+```
+src/
+  components/   UI (Header, Home, ChatPanel, Dashboard, tabs, SettingsModal, primitives)
+  hooks/        usePlanner (chat + plan state), useSettings (theme, a11y, key)
+  services/     gemini.ts (API client), planBuilder.ts (assemble + refine plans)
+  utils/        budgetEngine, timelineEngine, intakeParser, guardrails, aiSchema, integrity, format
+  data/         sample blueprints, offline template content
+tests/          Vitest + Testing Library + axe
+proxy/          Optional Cloudflare Worker that keeps the Gemini key server-side
+```
+
+## License
+
+MIT

@@ -1,8 +1,8 @@
 import type { EventDetails } from "../types";
 
-/**
- * XSS prevention: Escapes unsafe HTML characters.
- */
+export const MAX_INPUT_LENGTH = 1000;
+
+/** Escapes HTML-significant characters (use only when building HTML strings; React already escapes). */
 export function sanitizeInput(input: string): string {
   return input
     .replace(/&/g, "&amp;")
@@ -12,71 +12,83 @@ export function sanitizeInput(input: string): string {
     .replace(/'/g, "&#039;");
 }
 
+/** Normalises text so look-alike and invisible characters cannot hide payloads. */
+export function normalizeInput(input: string): string {
+  return (
+    input
+      .normalize("NFKC")
+      .replace(/[\u200B-\u200F\u202A-\u202E\u2060\uFEFF]/g, "")
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, MAX_INPUT_LENGTH)
+  );
+}
+
+const INJECTION_PATTERNS: RegExp[] = [
+  /\b(ignore|disregard|forget|override|bypass)\b.{0,30}\b(previous|prior|above|earlier|all|any|the|your)\b.{0,30}\b(instructions?|prompts?|rules?|guardrails?|system)\b/i,
+  /\b(reveal|show|print|leak|repeat|output)\b.{0,30}\b(system prompt|api[- ]?key|secrets?|hidden instructions?|keys)\b/i,
+  /\byou are now\b.{0,40}\b(unrestricted|evil|dan|jailbroken|developer mode)\b/i,
+  /\b(developer|god|dan) mode\b/i,
+  /jailbreak/i,
+  /<\s*script/i,
+  /javascript\s*:/i,
+  /<\|?(im_start|im_end|system)\|?>|\[\/?INST\]|<<\s*sys\s*>>|#{2,}\s*system\b/i,
+];
+
 /**
- * Prompt injection defense: Detects attempts to hijack model system instructions.
+ * First-layer heuristic only. The real defences are: untrusted text is delimited in the
+ * model prompt, and every model response is schema-validated before use.
  */
 export function detectPromptInjection(input: string): { isSafe: boolean; reason?: string } {
-  const patterns = [
-    /ignore (all )?previous instructions/i,
-    /override (the )?system prompt/i,
-    /you are now (an unrestricted|evil)/i,
-    /reveal (your|the) api key/i,
-    /jailbreak/i,
-    /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-  ];
-
-  for (const pattern of patterns) {
-    if (pattern.test(input)) {
-      return {
-        isSafe: false,
-        reason: "Potential prompt injection or adversarial payload detected.",
-      };
+  const text = normalizeInput(input);
+  for (const pattern of INJECTION_PATTERNS) {
+    if (pattern.test(text)) {
+      return { isSafe: false, reason: "Potential prompt injection or adversarial payload detected." };
     }
   }
-
   return { isSafe: true };
 }
 
-/**
- * Guardrail: Asserts that total budget is positive and reasonable.
- */
 export function validateBudgetGuardrail(budget: number): { isValid: boolean; message?: string } {
-  if (isNaN(budget) || budget <= 0) {
-    return { isValid: false, message: "Budget must be a positive number greater than $0." };
+  if (!Number.isFinite(budget) || budget <= 0) {
+    return { isValid: false, message: "Budget must be a positive number." };
   }
-  if (budget > 10000000) {
-    return { isValid: false, message: "Budget exceeds enterprise limits ($10,000,000)." };
+  if (budget > 10_000_000) {
+    return { isValid: false, message: "Budget exceeds the supported limit (10,000,000)." };
   }
   return { isValid: true };
 }
 
-/**
- * Problem Statement Requirement: "the assistant should state its assumptions".
- * Generates transparent assumptions formulated for the active plan.
- */
+export function validateGuestCount(guests: number): { isValid: boolean; message?: string } {
+  if (!Number.isInteger(guests) || guests < 1 || guests > 50_000) {
+    return { isValid: false, message: "Guest count must be a whole number between 1 and 50,000." };
+  }
+  return { isValid: true };
+}
+
+/** Problem statement requirement: the assistant must state its assumptions. */
 export function generateAssumptions(event: EventDetails): string[] {
   const assumptions: string[] = [
-    `Assumed guest count of ${event.guestCount} attendees for catering & venue capacity modeling.`,
-    `Budget math anchored strictly on percentage splits summing to exactly 100% ($${event.totalBudget.toLocaleString()}).`,
-    `Lead-time schedule calculated backward from target date (${event.date}).`,
+    `Planning for ${event.guestCount} guests when sizing venue and catering.`,
+    `Budget split uses fixed percentage templates that sum to exactly 100% of the total, calculated in code, not by the AI.`,
+    `Timeline is scheduled backward from the event date (${event.date}).`,
   ];
 
   if (event.type === "wedding") {
-    assumptions.push("Assumed formal seated dinner service with 45% venue & catering allocation.");
+    assumptions.push("Assumes a seated dinner, with roughly 45% of budget on venue and catering.");
     if (event.style === "outdoor") {
-      assumptions.push("Weather contingency: Marquee tent / covered backup space budgeted within 8% contingency.");
+      assumptions.push("Outdoor style: a covered backup space is expected to come from the contingency buffer.");
     }
-    if (event.culture) {
-      assumptions.push(`Customs & traditions respected: ${event.culture} protocol incorporated into timeline.`);
-    }
-    if (event.dietaryNeeds && event.dietaryNeeds.length > 0) {
-      assumptions.push(`Catering accommodates specified dietary preferences: ${event.dietaryNeeds.join(", ")}.`);
+    if (event.culture) assumptions.push(`Customs and traditions to respect: ${event.culture}.`);
+    if (event.dietaryNeeds?.length) {
+      assumptions.push(`Catering should accommodate: ${event.dietaryNeeds.join(", ")}.`);
     }
   } else if (event.type === "birthday") {
-    assumptions.push("Assumed 4-hour evening party format with cocktail bar and custom cake service.");
+    assumptions.push("Assumes a roughly 4-hour party with drinks and a custom cake.");
   } else if (event.type === "community") {
-    assumptions.push("Assumed public municipal park access requiring city sound permits and safety insurance.");
+    assumptions.push("Assumes a public venue that needs local permits, sound clearance and event insurance.");
   }
-
   return assumptions;
 }

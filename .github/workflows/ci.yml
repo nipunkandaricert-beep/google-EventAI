@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: ["main"]
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Format check
+        run: npm run format:check
+      - name: Type check
+        run: npm run typecheck
+      - name: Tests with coverage thresholds
+        run: npm run test:coverage
+      - name: Tests in a DST time zone
+        run: npm run test:tz
+      - name: Build
+        run: npm run build
+      - name: Dependency audit (production, high+)
+        run: npm run audit
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
