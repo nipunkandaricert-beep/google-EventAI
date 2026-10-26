@@ -2,9 +2,6 @@ import { lazy, Suspense, useState } from "react";
 import { ChatPanel } from "./components/ChatPanel";
 import { Header, type View } from "./components/Header";
 import { Home } from "./components/Home";
-import { WeddingStudio } from "./components/WeddingStudio";
-import { BirthdayStudio } from "./components/BirthdayStudio";
-import { CommunityStudio } from "./components/CommunityStudio";
 import { Toast } from "./components/primitives";
 import { SettingsModal } from "./components/SettingsModal";
 import { usePlanner } from "./hooks/usePlanner";
@@ -14,7 +11,20 @@ import type { EventType } from "./types";
 import { formatMoney } from "./utils/format";
 import { validateBudgetGuardrail } from "./utils/guardrails";
 
+/** Route-level code-split: each studio and dashboard loads only when navigated to. */
 const Dashboard = lazy(() => import("./components/Dashboard"));
+const WeddingStudio = lazy(() => import("./components/WeddingStudio").then((m) => ({ default: m.WeddingStudio })));
+const BirthdayStudio = lazy(() => import("./components/BirthdayStudio").then((m) => ({ default: m.BirthdayStudio })));
+const CommunityStudio = lazy(() =>
+  import("./components/CommunityStudio").then((m) => ({ default: m.CommunityStudio }))
+);
+
+/** Shared loading fallback for Suspense boundaries. */
+const LoadingFallback = (
+  <p role="status" className="muted p-4">
+    Loading…
+  </p>
+);
 
 export default function App() {
   const [view, setView] = useState<View>("home");
@@ -84,72 +94,78 @@ export default function App() {
           )}
 
           {view === "wedding" && (
-            <WeddingStudio
-              plan={planner.plan}
-              isSample={planner.isSample}
-              hasPlan={planner.hasPlan}
-              phase={planner.phase}
-              source={planner.source}
-              messages={planner.messages}
-              busy={planner.busy}
-              onSend={(t) => void planner.send(t)}
-              onGenerateWithDetails={planner.generateWithDetails}
-              onLoadSample={() => planner.loadSample("wedding")}
-              onReset={planner.reset}
-              onSpent={planner.updateSpent}
-              onToggleTimeline={planner.toggleTimeline}
-              onVendor={planner.setVendorStatus}
-              onIdea={planner.toggleIdea}
-              onTask={planner.setTaskStatus}
-              onCopy={copySummary}
-              onBackToHome={() => setView("home")}
-            />
+            <Suspense fallback={LoadingFallback}>
+              <WeddingStudio
+                plan={planner.plan}
+                isSample={planner.isSample}
+                hasPlan={planner.hasPlan}
+                phase={planner.phase}
+                source={planner.source}
+                messages={planner.messages}
+                busy={planner.busy}
+                onSend={(t) => void planner.send(t)}
+                onGenerateWithDetails={planner.generateWithDetails}
+                onLoadSample={() => planner.loadSample("wedding")}
+                onReset={planner.reset}
+                onSpent={planner.updateSpent}
+                onToggleTimeline={planner.toggleTimeline}
+                onVendor={planner.setVendorStatus}
+                onIdea={planner.toggleIdea}
+                onTask={planner.setTaskStatus}
+                onCopy={copySummary}
+                onBackToHome={() => setView("home")}
+              />
+            </Suspense>
           )}
 
           {view === "birthday" && (
-            <BirthdayStudio
-              plan={planner.plan}
-              isSample={planner.isSample}
-              hasPlan={planner.hasPlan}
-              phase={planner.phase}
-              source={planner.source}
-              messages={planner.messages}
-              busy={planner.busy}
-              onSend={(t) => void planner.send(t)}
-              onGenerateWithDetails={planner.generateWithDetails}
-              onLoadSample={() => planner.loadSample("birthday")}
-              onReset={planner.reset}
-              onSpent={planner.updateSpent}
-              onToggleTimeline={planner.toggleTimeline}
-              onVendor={planner.setVendorStatus}
-              onIdea={planner.toggleIdea}
-              onTask={planner.setTaskStatus}
-              onCopy={copySummary}
-              onBackToHome={() => setView("home")}
-            />
+            <Suspense fallback={LoadingFallback}>
+              <BirthdayStudio
+                plan={planner.plan}
+                isSample={planner.isSample}
+                hasPlan={planner.hasPlan}
+                phase={planner.phase}
+                source={planner.source}
+                messages={planner.messages}
+                busy={planner.busy}
+                onSend={(t) => void planner.send(t)}
+                onGenerateWithDetails={planner.generateWithDetails}
+                onLoadSample={() => planner.loadSample("birthday")}
+                onReset={planner.reset}
+                onSpent={planner.updateSpent}
+                onToggleTimeline={planner.toggleTimeline}
+                onVendor={planner.setVendorStatus}
+                onIdea={planner.toggleIdea}
+                onTask={planner.setTaskStatus}
+                onCopy={copySummary}
+                onBackToHome={() => setView("home")}
+              />
+            </Suspense>
           )}
 
           {view === "community" && (
-            <CommunityStudio
-              plan={planner.plan}
-              isSample={planner.isSample}
-              hasPlan={planner.hasPlan}
-              phase={planner.phase}
-              source={planner.source}
-              messages={planner.messages}
-              busy={planner.busy}
-              onSend={(t) => void planner.send(t)}
-              onGenerateWithDetails={planner.generateWithDetails}
-              onLoadSample={() => planner.loadSample("community")}
-              onReset={planner.reset}
-              onSpent={planner.updateSpent}
-              onToggleTimeline={planner.toggleTimeline}
-              onVendor={planner.setVendorStatus}
-              onIdea={planner.toggleIdea}
-              onTask={planner.setTaskStatus}
-              onCopy={copySummary}
-              onBackToHome={() => setView("home")}
-            />
+            <Suspense fallback={LoadingFallback}>
+              <CommunityStudio
+                plan={planner.plan}
+                isSample={planner.isSample}
+                hasPlan={planner.hasPlan}
+                phase={planner.phase}
+                source={planner.source}
+                messages={planner.messages}
+                busy={planner.busy}
+                onSend={(t) => void planner.send(t)}
+                onGenerateWithDetails={planner.generateWithDetails}
+                onLoadSample={() => planner.loadSample("community")}
+                onReset={planner.reset}
+                onSpent={planner.updateSpent}
+                onToggleTimeline={planner.toggleTimeline}
+                onVendor={planner.setVendorStatus}
+                onIdea={planner.toggleIdea}
+                onTask={planner.setTaskStatus}
+                onCopy={copySummary}
+                onBackToHome={() => setView("home")}
+              />
+            </Suspense>
           )}
 
           {view === "planner" && (
@@ -164,13 +180,7 @@ export default function App() {
                 onGenerate={() => void planner.generate()}
                 onReset={planner.reset}
               />
-              <Suspense
-                fallback={
-                  <p role="status" className="muted p-4">
-                    Loading dashboard…
-                  </p>
-                }
-              >
+              <Suspense fallback={LoadingFallback}>
                 <Dashboard
                   plan={planner.plan}
                   isSample={planner.isSample}

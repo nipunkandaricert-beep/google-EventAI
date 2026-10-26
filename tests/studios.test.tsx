@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { WeddingStudio } from "../src/components/WeddingStudio";
@@ -95,7 +95,7 @@ describe("Dedicated Studio components", () => {
       );
     });
 
-    it("renders active plan and dashboard when hasPlan is true", () => {
+    it("renders active plan and dashboard when hasPlan is true", async () => {
       render(
         <WeddingStudio
           {...commonProps}
@@ -108,7 +108,9 @@ describe("Dedicated Studio components", () => {
       );
 
       expect(screen.getByRole("heading", { name: /wedding studio/i })).toBeInTheDocument();
-      expect(screen.getByRole("tablist", { name: /plan sections/i })).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByRole("tablist", { name: /plan sections/i })).toBeInTheDocument();
+      });
     });
   });
 
@@ -179,7 +181,7 @@ describe("Dedicated Studio components", () => {
       );
     });
 
-    it("renders birthday plan dashboard when hasPlan is true", () => {
+    it("renders birthday plan dashboard when hasPlan is true", async () => {
       render(
         <BirthdayStudio
           {...commonProps}
@@ -191,7 +193,9 @@ describe("Dedicated Studio components", () => {
         />
       );
 
-      expect(screen.getByRole("tablist", { name: /plan sections/i })).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByRole("tablist", { name: /plan sections/i })).toBeInTheDocument();
+      });
     });
   });
 
@@ -262,7 +266,7 @@ describe("Dedicated Studio components", () => {
       );
     });
 
-    it("renders community plan dashboard when hasPlan is true", () => {
+    it("renders community plan dashboard when hasPlan is true", async () => {
       render(
         <CommunityStudio
           {...commonProps}
@@ -274,7 +278,9 @@ describe("Dedicated Studio components", () => {
         />
       );
 
-      expect(screen.getByRole("tablist", { name: /plan sections/i })).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByRole("tablist", { name: /plan sections/i })).toBeInTheDocument();
+      });
     });
   });
 });

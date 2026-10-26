@@ -1,10 +1,29 @@
-import { useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import type { ChatMessage, EventPlan, EventStyle, TaskStatus, VendorStatus } from "../types";
 import { formatMoney } from "../utils/format";
 import { validateBudgetGuardrail } from "../utils/guardrails";
 import { ChatPanel } from "./ChatPanel";
-import Dashboard from "./Dashboard";
 import type { Phase } from "../hooks/usePlanner";
+import { BudgetSplitCard, FeaturePillSelector, StudioHeroHeader } from "./StudioCommon";
+
+const Dashboard = lazy(() => import("./Dashboard"));
+
+const COMMUNITY_LOGISTICS = [
+  "Covered Stage & PA Sound",
+  "Food Truck Zone (5 trucks)",
+  "Volunteer Check-in Tent",
+  "Portable Sanitation & Waste",
+  "First Aid & Security Booth",
+  "Event Traffic Signage",
+  "Kids Bounce Zone & Games",
+] as const;
+
+const COMMUNITY_SPLIT_CATEGORIES = [
+  { name: "Staging, AV & Sound", percentage: 30 },
+  { name: "Permits, Security & Insurance", percentage: 25 },
+  { name: "Waste, Restrooms & Safety", percentage: 20 },
+  { name: "Marketing & Signage", percentage: 15 },
+] as const;
 
 interface Props {
   plan: EventPlan;
@@ -36,8 +55,10 @@ interface Props {
   onBackToHome: () => void;
 }
 
+/**
+ * Dedicated Community & Public Festival Studio with municipal logistics and crowd management.
+ */
 export function CommunityStudio(p: Props) {
-  // Dedicated Community / Festival Form Inputs
   const [eventName, setEventName] = useState("Oakridge Autumn Arts & Music Festival");
   const [category, setCategory] = useState("Arts & Music Festival");
   const [festivalDate, setFestivalDate] = useState("2026-11-28");
@@ -68,45 +89,29 @@ export function CommunityStudio(p: Props) {
       date: festivalDate,
       style,
       location,
-      notes: `${category}. Permits: ${permits}. Infrastructure: ${logistics.join(", ")}`,
+      notes: `Category: ${category}. Permits: ${permits}. Infrastructure: ${logistics.join(", ")}`,
     });
   };
 
-  const perGuest = Math.round(budget / Math.max(1, attendees));
+  const perGuest = useMemo(() => Math.round(budget / Math.max(1, attendees)), [budget, attendees]);
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-4">
-      {/* Community Header Banner */}
-      <div className="rounded-3xl bg-gradient-to-r from-emerald-950 via-teal-900 to-slate-900 p-6 text-white shadow-xl">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-teal-400/40 bg-teal-500/20 px-3 py-1 text-xs font-semibold text-teal-200">
-              <span>🎪</span> Dedicated Festival & Community Studio
-            </div>
-            <h1 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Community & Festival Studio</h1>
-            <p className="mt-1 text-sm text-teal-100">
-              Built for outdoor parks, city permits, AV sound stages, food trucks, and volunteer team scheduling.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={p.onLoadSample}
-              className="btn border border-white/80 bg-white/10 text-white hover:bg-white/20"
-            >
-              Explore Sample Festival
-            </button>
-            <button type="button" onClick={p.onBackToHome} className="btn bg-white text-emerald-950 hover:bg-teal-100">
-              ← Back to Home
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Standardized Hero Banner */}
+      <StudioHeroHeader
+        badgeIcon="🎪"
+        badgeLabel="Dedicated Community & Festival Studio"
+        title="Community & Festival Studio"
+        subtitle="Tailored for outdoor parks, city permits, AV sound stages, food trucks, and volunteer team scheduling."
+        sampleButtonLabel="Explore Sample Festival"
+        gradientClass="bg-gradient-to-r from-emerald-950 via-teal-900 to-cyan-950"
+        onExploreSample={p.onLoadSample}
+        onBackToHome={p.onBackToHome}
+      />
 
-      {/* Main Studio Content: Either Input Setup Mode OR Active Plan Dashboard */}
+      {/* Main Studio Content */}
       {!p.hasPlan && !p.isSample ? (
         <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
-          {/* Left Panel: Community Setup Form */}
           <section className="surface space-y-5 p-6">
             <div className="border-b border-slate-200 pb-3 dark:border-slate-800">
               <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Festival Blueprint Configuration</h2>
@@ -269,70 +274,23 @@ export function CommunityStudio(p: Props) {
               />
             </div>
 
-            {/* Logistics Checkboxes */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-2">
-                Festival Infrastructure & Logistics
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  "Covered Stage & PA Sound",
-                  "Food Truck Zone (5 trucks)",
-                  "Volunteer Check-in Tent",
-                  "Portable Sanitation & Waste",
-                  "First Aid & Safety Booth",
-                  "Kids Activities & Inflatables",
-                  "Social Media & Printed Banners",
-                ].map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    onClick={() => toggleLogistic(item)}
-                    className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
-                      logistics.includes(item)
-                        ? "bg-teal-700 text-white shadow"
-                        : "border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
-                    }`}
-                  >
-                    {logistics.includes(item) ? "✓ " : "+ "}
-                    {item}
-                  </button>
-                ))}
-              </div>
-            </div>
+            {/* Modular Logistics Pills */}
+            <FeaturePillSelector
+              title="Festival Infrastructure & Logistics"
+              items={COMMUNITY_LOGISTICS}
+              selectedItems={logistics}
+              activeColorClass="bg-teal-700"
+              onToggle={toggleLogistic}
+            />
 
-            {/* Live Community Distribution Estimator */}
-            <div className="rounded-xl border border-teal-200 bg-teal-50/50 p-4 dark:border-teal-900/40 dark:bg-teal-950/20">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-teal-900 dark:text-teal-300">
-                Projected Festival Budget Split
-              </h3>
-              <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
-                <div className="rounded bg-white p-2 dark:bg-slate-900 shadow-sm">
-                  <span className="muted block">Permits & Stage (30%)</span>
-                  <span className="font-bold text-slate-900 dark:text-slate-100">
-                    {formatMoney(Math.round(budget * 0.3), "USD")}
-                  </span>
-                </div>
-                <div className="rounded bg-white p-2 dark:bg-slate-900 shadow-sm">
-                  <span className="muted block">Sound & AV (20%)</span>
-                  <span className="font-bold text-slate-900 dark:text-slate-100">
-                    {formatMoney(Math.round(budget * 0.2), "USD")}
-                  </span>
-                </div>
-                <div className="rounded bg-white p-2 dark:bg-slate-900 shadow-sm">
-                  <span className="muted block">Marketing (15%)</span>
-                  <span className="font-bold text-slate-900 dark:text-slate-100">
-                    {formatMoney(Math.round(budget * 0.15), "USD")}
-                  </span>
-                </div>
-                <div className="rounded bg-white p-2 dark:bg-slate-900 shadow-sm">
-                  <span className="muted block">Performers & Ops (25%)</span>
-                  <span className="font-bold text-slate-900 dark:text-slate-100">
-                    {formatMoney(Math.round(budget * 0.25), "USD")}
-                  </span>
-                </div>
-              </div>
-            </div>
+            {/* Modular Budget Split Card */}
+            <BudgetSplitCard
+              totalBudget={budget}
+              categories={COMMUNITY_SPLIT_CATEGORIES}
+              cardBorderClass="border-teal-200 dark:border-teal-900/40"
+              cardBgClass="bg-teal-50/50 dark:bg-teal-950/20"
+              titleColorClass="text-teal-900 dark:text-teal-300"
+            />
 
             {/* Launch Action */}
             <div className="pt-2 flex flex-wrap gap-3">
@@ -342,12 +300,12 @@ export function CommunityStudio(p: Props) {
                 disabled={p.busy || budget < 1000}
                 className="btn btn-primary flex-1 py-3 text-base shadow-lg hover:shadow-indigo-500/25"
               >
-                {p.busy ? "Generating Festival Blueprint…" : "🎪 Generate Festival Blueprint"}
+                {p.busy ? "Generating Festival Blueprint…" : "✨ Generate Festival Blueprint"}
               </button>
             </div>
           </section>
 
-          {/* Right Panel: Chat Assistant for Community */}
+          {/* Right Panel: Chat Assistant */}
           <div className="space-y-4">
             <ChatPanel
               messages={p.messages}
@@ -361,12 +319,12 @@ export function CommunityStudio(p: Props) {
           </div>
         </div>
       ) : (
-        /* Generated / Sample Community Plan Dashboard */
+        /* Generated Dashboard View */
         <div className="grid gap-6 lg:grid-cols-[22rem_1fr]">
           <div className="space-y-4">
             <div className="surface p-4 flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold uppercase text-teal-600">Active Festival Blueprint</p>
+                <p className="text-xs font-bold uppercase text-teal-600">Active Blueprint</p>
                 <p className="font-bold text-sm">{p.plan.event.name}</p>
               </div>
               <button type="button" onClick={p.onReset} className="btn btn-ghost text-xs">
@@ -377,24 +335,31 @@ export function CommunityStudio(p: Props) {
               messages={p.messages}
               busy={p.busy}
               phase={p.phase}
-              canGenerate={true}
+              canGenerate={false}
               onSend={p.onSend}
               onGenerate={handleGenerate}
               onReset={p.onReset}
             />
           </div>
-
-          <Dashboard
-            plan={p.plan}
-            isSample={p.isSample}
-            source={p.source}
-            onSpent={p.onSpent}
-            onToggleTimeline={p.onToggleTimeline}
-            onVendor={p.onVendor}
-            onIdea={p.onIdea}
-            onTask={p.onTask}
-            onCopy={p.onCopy}
-          />
+          <Suspense
+            fallback={
+              <p role="status" className="muted p-4">
+                Loading dashboard…
+              </p>
+            }
+          >
+            <Dashboard
+              plan={p.plan}
+              isSample={p.isSample}
+              source={p.source}
+              onSpent={p.onSpent}
+              onToggleTimeline={p.onToggleTimeline}
+              onVendor={p.onVendor}
+              onIdea={p.onIdea}
+              onTask={p.onTask}
+              onCopy={p.onCopy}
+            />
+          </Suspense>
         </div>
       )}
     </div>

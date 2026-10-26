@@ -21,10 +21,28 @@ function csp(proxyUrl?: string): Plugin {
   };
 }
 
+/** Split React runtime into a stable vendor chunk for long-term caching. */
+const vendorModules = new Set(["react", "react-dom"]);
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "VITE_");
   return {
     plugins: [react(), tailwindcss(), csp(env.VITE_GEMINI_PROXY_URL)],
     base: "./",
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes("node_modules")) {
+              for (const mod of vendorModules) {
+                if (id.includes(`/${mod}/`) || id.includes(`\\${mod}\\`)) {
+                  return "vendor";
+                }
+              }
+            }
+          },
+        },
+      },
+    },
   };
 });
